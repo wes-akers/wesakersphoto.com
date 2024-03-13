@@ -1,0 +1,46 @@
+name: Build web
+
+on: [push]
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: List files in the images directory and save to a file
+        run: |
+          if [ -d wessite/web/images ]; then
+            echo "Saving list of files in the images directory to images-list.txt:"
+            find wessite/web/images -maxdepth 2 -type f ! -name "*.txt" | sed 's|wessite/web/||' > wessite/assets/images-list.txt
+            cat wessite/assets/images-list.txt
+          else
+            echo "The images directory does not exist."
+          fi
+
+      - name: Futter action
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Pub get
+        run: cd wessite && flutter pub get
+
+      - name: Build web
+        run: cd wessite && flutter build web --base-href /gitgallery_codespace/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: wessite/build/web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
