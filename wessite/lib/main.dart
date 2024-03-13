@@ -63,7 +63,6 @@ class _WessiteAppState extends State<WessiteApp> {
   bool loaded = false;
 
   final galleryImages = <String, List<String>>{};
-  final galleryDescriptions = <String, String>{};
 
   final carousel = CarouselController();
 
@@ -271,10 +270,12 @@ class _WessiteAppState extends State<WessiteApp> {
     super.initState();
     final futures = <Future>[
       http.get(Uri.parse('about.txt')).then((value) => about = value.body),
-      http.get(Uri.parse('email.txt')).then((value) => email = value.body),
+      http
+          .get(Uri.parse('email.txt'))
+          .then((value) => email = value.body.trim()),
       http
           .get(Uri.parse('instagram.txt'))
-          .then((value) => instagram = value.body),
+          .then((value) => instagram = value.body.trim()),
     ];
     futures.add(
         rootBundle.loadString('assets/images-list.txt').then((value) async {
@@ -282,15 +283,6 @@ class _WessiteAppState extends State<WessiteApp> {
         final galleryName = filename.split('/')[1];
         galleryImages[galleryName] ??= [];
         galleryImages[galleryName]!.add(filename);
-        if (galleryDescriptions[galleryName] == null) {
-          try {
-            final value = await http
-                .get(Uri.parse('images/$galleryName/description.txt'));
-            galleryDescriptions[galleryName] = value.body;
-          } catch (e) {
-            galleryDescriptions[galleryName] = '';
-          }
-        }
       }
     }));
     Future.wait(futures).then((value) => setState(() => loaded = true));
@@ -301,37 +293,29 @@ class _WessiteAppState extends State<WessiteApp> {
     return WessitePage(
       email: email,
       instagram: instagram,
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              const SizedBox(width: 32),
-              IconButton(
-                  onPressed: carousel.previousPage,
-                  icon: const Icon(Icons.keyboard_arrow_left)),
-              Expanded(
-                child: CarouselSlider.builder(
-                  carouselController: carousel,
-                  options: CarouselOptions(
-                      // aspectRatio: 1,
-                      viewportFraction: 1.0,
-                      scrollPhysics: const NeverScrollableScrollPhysics()),
-                  itemCount: items.length,
-                  itemBuilder: (BuildContext context, int itemIndex,
-                          int pageViewIndex) =>
+          const SizedBox(width: 32),
+          IconButton(
+              onPressed: carousel.previousPage,
+              icon: const Icon(Icons.keyboard_arrow_left)),
+          Expanded(
+            child: CarouselSlider.builder(
+              carouselController: carousel,
+              options: CarouselOptions(
+                  // aspectRatio: 1,
+                  viewportFraction: 1.0,
+                  scrollPhysics: const NeverScrollableScrollPhysics()),
+              itemCount: items.length,
+              itemBuilder:
+                  (BuildContext context, int itemIndex, int pageViewIndex) =>
                       Image.network(items[itemIndex]),
-                ),
-              ),
-              IconButton(
-                  onPressed: carousel.nextPage,
-                  icon: const Icon(Icons.keyboard_arrow_right)),
-              const SizedBox(width: 32),
-            ],
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Center(child: Text(galleryDescriptions[gallery] ?? '')),
-          ),
+          IconButton(
+              onPressed: carousel.nextPage,
+              icon: const Icon(Icons.keyboard_arrow_right)),
+          const SizedBox(width: 32),
         ],
       ),
     );
