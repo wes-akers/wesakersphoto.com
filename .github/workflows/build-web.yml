@@ -34,7 +34,7 @@ jobs:
         run: cd wessite && flutter pub get
 
       - name: Build web
-        run: cd wessite && flutter build web --base-href /wesakersphoto.com/
+        run: cd wessite && flutter build web
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
